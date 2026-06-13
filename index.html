@@ -26,7 +26,38 @@
         .error { background-color: #fed7d7; color: #742a2a; display: block !important; }
         .loading { background-color: #feebc8; color: #744210; display: block !important; }
         .location-badge { font-size: 14px; font-weight: bold; padding: 12px; border-radius: 8px; background: #feebc8; color: #744210; margin-bottom: 20px; }
-        .welcome-back { background-color: #e2e8f0; color: #2d3748; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; font-size: 16px; }
+        
+        /* 📱 ปรับแต่งแถบชื่อให้แสดงผลแบบแนวนอน และจัดไอคอนถังขยะไว้ท้ายสุด */
+        .welcome-back { 
+            background-color: #e2e8f0; 
+            color: #2d3748; 
+            padding: 12px 15px; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            margin-bottom: 15px; 
+            font-size: 16px; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-align: left;
+        }
+
+        /* ปุ่มรูปถังขยะแบบไอคอน มินิมอล */
+        .clear-icon-btn {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .clear-icon-btn:hover {
+            background-color: rgba(220, 38, 38, 0.1); /* ไฮไลท์แดงจางๆ ตอนเอาเมาส์ชี้ */
+        }
     </style>
 </head>
 <body>
@@ -35,7 +66,7 @@
     <h2>บันทึกเวลาปฏิบัติราชการ</h2>
     <p class="subtitle">โรงเรียนบ้านหนองประดู่ สพป.ลพบุรี เขต 2</p>
     
-    <div id="location-info" class="location-badge">⏳ กำลังตรวจสอบตำแหน่งพิกัด GPS ของคุณ...</div>
+    <div id="location-info" class="location-badge">📡 กำลังตรวจสอบตำแหน่งพิกัด GPS ของคุณ...</div>
 
     <div id="register-area" style="display: none;">
         <div class="form-group">
@@ -46,7 +77,10 @@
     </div>
 
     <div id="main-area" style="display: none;">
-        <div id="welcome-msg" class="welcome-back"></div>
+        <div id="welcome-msg" class="welcome-back">
+            <span id="user-display-info">📱 </span>
+            <button type="button" class="clear-icon-btn" onclick="clearDevice()" title="ลบการผูกชื่อเครื่องนี้">🗑️</button>
+        </div>
         
         <div id="camera-container">
             <video id="video" autoplay playsinline muted></video>
@@ -55,15 +89,13 @@
 
         <button type="button" class="btn" id="capture-btn" onclick="capturePhoto()">📸 ถ่ายรูปใบหน้า</button>
         <button type="button" class="btn btn-secondary" id="retake-btn" onclick="retakePhoto()" style="display:none;">🔄 ถ่ายใหม่</button>
-        <button type="button" class="btn" id="submit-btn" onclick="submitAttendance()" style="background-color: #48bb78; margin-top:10px; display: none;">📤 ส่งเวลาเข้างาน</button>
-        <button type="button" class="btn btn-secondary" id="clear-btn" onclick="clearDevice()" style="margin-top: 20px; font-size: 12px; padding: 5px; background: none; color: #a0aec0;">ลบการผูกชื่อเครื่องนี้</button>
+        <button type="button" class="btn" id="submit-btn" onclick="submitAttendance()" style="margin-top:10px; display: none;">📥 ส่งเวลาเข้างาน</button>
     </div>
 
     <div id="status"></div>
 </div>
 
 <script>
-    // ⚠️ นำลิงก์จากหน้า Deployment (/exec) ของกูเกิลมาใส่ตรงนี้เหมือนเดิมครับ
     const BACKEND_URL = "https://script.google.com/macros/s/AKfycbxyCwvvkH_7oTL08MCuihUOgOdziS93WPLtBXLC59D_x8sCM3TT5DZEq96QmWiyNKg8/exec"; 
 
     let base64Photo = "";
@@ -81,7 +113,21 @@
 
     window.onload = function() {
         checkDeviceLock();
+        checkTimeAndAdjustButton(); 
     };
+
+    function checkTimeAndAdjustButton() {
+        const now = new Date();
+        const currentHour = now.getHours();
+
+        if (currentHour >= 13) {
+            submitBtn.innerHTML = "📤 ส่งเวลาออกงาน";
+            submitBtn.style.backgroundColor = "#e06d1f"; 
+        } else {
+            submitBtn.innerHTML = "📥 ส่งเวลาเข้างาน";
+            submitBtn.style.backgroundColor = "#48bb78"; 
+        }
+    }
 
     function checkDeviceLock() {
         savedName = localStorage.getItem('employee_name');
@@ -90,24 +136,23 @@
                 userLocation.lat = position.coords.latitude;
                 userLocation.lng = position.coords.longitude;
                 
-                locationInfo.innerHTML = "✅ ตรวจสอบพิกัด GPS เรียบร้อย";
+                locationInfo.innerHTML = "📡 ตรวจสอบพิกัด GPS เรียบร้อย";
                 locationInfo.style.backgroundColor = "#c6f6d5";
                 locationInfo.style.color = "#22543d";
 
                 if (!savedName) {
-                    // ถ้ายังไม่ผูกชื่อ ให้ไปหน้าลงทะเบียน
                     document.getElementById('register-area').style.display = 'block';
                     document.getElementById('main-area').style.display = 'none';
                 } else {
-                    // ถ้าผูกชื่อแล้ว ให้เข้าหน้ากล้องทันที
                     document.getElementById('register-area').style.display = 'none';
                     document.getElementById('main-area').style.display = 'block';
-                    document.getElementById('welcome-msg').innerHTML = "👤 เครื่องนี้ผูกกับคุณ: " + savedName;
+                    // นำชื่อไปใส่ต่อท้ายรูปโทรศัพท์มือถือ
+                    document.getElementById('user-display-info').innerHTML = "📱 " + savedName;
                     document.getElementById('camera-container').style.display = 'block';
                     initCamera();
                 }
             }, function(error) {
-                locationInfo.innerHTML = "❌ เข้าถึงพิกัดไม่ได้! กรุณาเปิดสิทธิ์พิกัดบนมือถือ";
+                locationInfo.innerHTML = "📡 เข้าถึงพิกัดไม่ได้! กรุณาเปิดสิทธิ์พิกัดบนมือถือ";
                 locationInfo.style.backgroundColor = "#fed7d7";
                 locationInfo.style.color = "#742a2a";
             }, { enableHighAccuracy: true, timeout: 10000 });
@@ -123,7 +168,7 @@
         
         document.getElementById('register-area').style.display = 'none';
         document.getElementById('main-area').style.display = 'block';
-        document.getElementById('welcome-msg').innerHTML = "👤 เครื่องนี้ผูกกับคูณ: " + savedName;
+        document.getElementById('user-display-info').innerHTML = "📱 " + savedName;
         document.getElementById('camera-container').style.display = 'block';
         initCamera();
     }
