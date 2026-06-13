@@ -1,543 +1,168 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPS ATTENDANCE SYSTEM (CYBERPUNK VERSION)</title>
-    <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;600&family=Orbitron:wght@700;900&family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --cyber-bg: linear-gradient(180deg, #020617 0%, #0b1329 100%);
-            --neon-cyan: #00f0ff;
-            --neon-green: #39ff14;
-            --neon-orange: #ff5e00;
-            --neon-red: #ff0055;
-            --dark-surface: rgba(15, 23, 42, 0.8);
-            --border-glow: rgba(0, 240, 255, 0.25);
-            --font-heavy: 'Orbitron', 'Mitr', sans-serif;
-        }
+// ==========================================
+// 🛠️ ส่วนตั้งค่าระบบ (ปรับแต่งตรงนี้ได้เลย)
+// ==========================================
+const TARGET_LAT = 13.7563;        // 📍 พิกัดละทีจูดของบริษัท
+const TARGET_LNG = 100.5018;       // 📍 พิกัดลองจิจูดของบริษัท
+const MAX_DISTANCE_M = 1000000;    // 📏 ระยะห่างที่อนุญาต (เมตร)
+const DRIVE_FOLDER_ID = "112IU1JrxeNPtLONsELebjuBbDyFjt0Gi"; // 📁 ID โฟลเดอร์เก็บรูปพนักงาน
 
-        * { 
-            box-sizing: border-box; 
-            margin: 0; 
-            padding: 0;
-            font-family: 'Sarabun', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body { 
-            background: var(--cyber-bg);
-            min-height: 100vh; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            padding: 16px;
-            color: #ffffff;
-            overflow: hidden;
-        }
-
-        /* กล่องคอนเทนเนอร์เกราะเหล็ก Cyber Shield */
-        .app-card { 
-            background: var(--dark-surface);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            padding: 45px 30px 35px 30px; 
-            border-radius: 24px; 
-            box-shadow: 0 0 40px rgba(0, 240, 255, 0.15), inset 0 0 15px rgba(255,255,255,0.05); 
-            width: 100%; 
-            max-width: 430px; 
-            text-align: center;
-            border: 2px solid var(--border-glow);
-            position: relative;
-            clip-path: polygon(0 0, 93% 0, 100% 7%, 100% 100%, 7% 100%, 0 93%); /* ตัดมุมแบบกล่องทหารสุดล้ำ */
-        }
-
-        /* หน้าจอนาฬิกาขอบเหล็กหนาบึกบึน */
-        .live-clock {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 40px;
-            font-weight: 900;
-            color: var(--neon-cyan);
-            letter-spacing: 2px;
-            margin-bottom: 5px;
-            text-shadow: 0 0 15px rgba(0, 240, 255, 0.6);
-        }
-
-        h2 { 
-            font-family: var(--font-heavy);
-            font-size: 22px;
-            font-weight: 600;
-            color: #ffffff;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-
-        p.subtitle { 
-            color: #64748b; 
-            font-size: 13px; 
-            margin-bottom: 25px;
-            font-weight: 700;
-            letter-spacing: 1px;
-        }
-
-        /* 📡 เรดาร์สัญญาณพิกัด GPS */
-        .radar-panel {
-            background: rgba(2, 6, 23, 0.8);
-            border: 1px solid rgba(0, 240, 255, 0.2);
-            padding: 14px;
-            border-radius: 14px;
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            font-size: 13px;
-            font-weight: bold;
-            color: var(--neon-cyan);
-        }
-
-        /* จุดสัญญาณไฟเลเซอร์กระพริบแบบเรดาร์ */
-        .radar-signal {
-            width: 12px;
-            height: 12px;
-            background-color: var(--neon-orange);
-            border-radius: 50%;
-            position: relative;
-        }
-        .radar-signal::after {
-            content: '';
-            position: absolute;
-            width: 100%; height: 100%;
-            top: 0; left: 0;
-            background-color: inherit;
-            border-radius: 50%;
-            animation: pulse-ring 1.5s cubic-bezier(0.215, 0.610, 0.355, 1) infinite;
-        }
-
-        .form-group { 
-            margin-bottom: 25px; 
-            text-align: left; 
-        }
-
-        label { 
-            font-family: var(--font-heavy);
-            display: block; 
-            margin-bottom: 10px; 
-            color: #94a3b8; 
-            font-size: 12px; 
-            letter-spacing: 1px;
-        }
-
-        input[type="text"] { 
-            width: 100%; 
-            padding: 16px; 
-            border: 2px solid #334155; 
-            border-radius: 12px; 
-            font-size: 16px; 
-            outline: none;
-            transition: all 0.25s;
-            background: #020617;
-            color: #ffffff;
-            font-weight: bold;
-            text-align: center;
-            letter-spacing: 1px;
-        }
-        
-        input[type="text"]:focus {
-            border-color: var(--neon-cyan);
-            box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
-        }
-
-        /* กรอบกล้องหน้ากากสแกนเนอร์กองทัพ */
-        #camera-container { 
-            width: 100%; 
-            height: 290px; 
-            background-color: #000000; 
-            border-radius: 20px; 
-            overflow: hidden; 
-            margin-bottom: 25px; 
-            position: relative; 
-            display: none; 
-            border: 2px solid #334155;
-        }
-
-        /* เส้นตารางสแกนใบหน้า AI HUD */
-        #camera-container::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(0,240,255,0.03) 50%, rgba(0,0,0,0.1) 50%), linear-gradient(90deg, rgba(0,240,255,0.03) 50%, rgba(0,0,0,0.1) 50%);
-            background-size: 10px 10px;
-            z-index: 2;
-            pointer-events: none;
-        }
-
-        /* วงแหวนเป้าเล็งใบหน้า */
-        #camera-container::after {
-            content: '';
-            position: absolute;
-            top: 15%; left: 20%; right: 20%; bottom: 15%;
-            border: 2px solid var(--neon-cyan);
-            border-radius: 30px;
-            pointer-events: none;
-            z-index: 3;
-            opacity: 0.4;
-            animation: target-glow 2s infinite ease-in-out;
-        }
-
-        video, canvas { 
-            width: 100%; 
-            height: 100%; 
-            object-fit: cover; 
-            transform: scaleX(-1); 
-        }
-
-        #captured-image { 
-            display: none; 
-            width: 100%; 
-            height: 100%; 
-            object-fit: cover; 
-            transform: scaleX(-1); 
-            position: relative;
-            z-index: 4;
-        }
-
-        /* ปุ่มกดแนวเหล็กตัน ดุดัน แข็งแกร่ง */
-        .btn { 
-            font-family: var(--font-heavy);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            background: var(--neon-cyan);
-            color: #020617; 
-            border: none; 
-            padding: 16px 24px; 
-            width: 100%; 
-            border-radius: 12px; 
-            font-size: 16px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            transition: all 0.2s ease; 
-            margin-bottom: 15px; 
-            text-transform: uppercase;
-            box-shadow: 0 4px 15px rgba(0, 240, 255, 0.2);
-        }
-
-        .btn:hover { 
-            filter: brightness(1.2);
-            box-shadow: 0 0 25px rgba(0, 240, 255, 0.5);
-        }
-        
-        .btn:active {
-            transform: scale(0.98);
-        }
-
-        .btn:disabled {
-            background: #1e293b !important;
-            color: #475569 !important;
-            cursor: not-allowed;
-            box-shadow: none !important;
-            filter: none;
-        }
-
-        .btn-orange { 
-            background: var(--neon-orange);
-            color: white;
-            box-shadow: 0 4px 15px rgba(255, 94, 0, 0.3);
-        }
-
-        .btn-secondary { 
-            background: #1e293b;
-            color: #ffffff;
-            border: 1px solid #475569;
-            box-shadow: none;
-        }
-
-        /* ปุ่มส่งเวลาระบบสลับอัตโนมัติ */
-        .btn-submit-dynamic {
-            background: var(--neon-green);
-            color: #020617;
-            margin-top: 15px;
-            display: none;
-            box-shadow: 0 5px 20px rgba(57, 255, 20, 0.3);
-        }
-        .btn-submit-dynamic:hover {
-            box-shadow: 0 0 25px rgba(57, 255, 20, 0.6);
-        }
-
-        /* ป้ายแจ้งสถานะ */
-        #status { 
-            margin-top: 18px; 
-            font-size: 14px; 
-            font-weight: bold; 
-            padding: 15px; 
-            border-radius: 12px; 
-            display: none; 
-            text-align: center;
-            animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .success { background: rgba(57, 255, 20, 0.1); color: var(--neon-green); display: block !important; border: 1px solid var(--neon-green); }
-        .error { background: rgba(255, 0, 85, 0.1); color: var(--neon-red); display: block !important; border: 1px solid var(--neon-red); }
-        .loading { background: rgba(0, 240, 255, 0.1); color: var(--neon-cyan); display: block !important; border: 1px solid var(--neon-cyan); }
-
-        /* การ์ดยืนยันเครื่องระบบทหาร */
-        .welcome-back { 
-            background: rgba(2, 6, 23, 0.9);
-            color: #ffffff; 
-            padding: 15px; 
-            border-radius: 12px; 
-            font-weight: bold; 
-            margin-bottom: 25px; 
-            font-size: 14px; 
-            border-left: 4px solid var(--neon-cyan);
-            border-right: 4px solid var(--neon-cyan);
-            font-family: var(--font-heavy);
-        }
-
-        /* ลบปุ่มลบผูกเครื่องเดิมออก เปลี่ยนเป็นฟังก์ชันถอนสิทธิ์หลบสายตาแฝงความล้ำ */
-        #clear-btn { 
-            margin-top: 25px; 
-            font-size: 11px; 
-            padding: 8px; 
-            background: none; 
-            color: #475569; 
-            border: none;
-            cursor: pointer;
-            font-family: 'Orbitron', sans-serif;
-            letter-spacing: 1.5px;
-            font-weight: 700;
-            transition: all 0.2s;
-        }
-        #clear-btn:hover {
-            color: var(--neon-red);
-            text-shadow: 0 0 10px rgba(255, 0, 85, 0.5);
-        }
-
-        /* Animations */
-        @keyframes pulse-ring {
-            0% { transform: scale(0.95); opacity: 1; }
-            100% { transform: scale(2.5); opacity: 0; }
-        }
-        @keyframes target-glow {
-            0%, 100% { border-color: var(--neon-cyan); box-shadow: 0 0 5px rgba(0,240,255,0.2); }
-            50% { border-color: var(--neon-green); box-shadow: 0 0 15px rgba(57,255,20,0.4); }
-        }
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    </style>
-</head>
-<body>
-
-<div class="app-card">
-    <div class="live-clock" id="clock-display">00:00:00</div>
-    <h2>บันทึกเวลาปฏิบัติราชการ</h2>
-    <p class="subtitle">โรงเรียนบ้านหนองประดู่ สพป.ลพบุรี เขต 2</p>
+function doPost(e) {
+  let response;
+  try {
+    const payload = JSON.parse(e.postData.contents);
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
     
-    <div id="radar-panel" class="radar-panel">
-        <div id="radar-light" class="radar-signal"></div>
-        <span id="radar-text">CONNECTING SATELLITE...</span>
-    </div>
+    if (payload.action === "submit_attendance") {
+      const distance = calculateDistance(payload.lat, payload.lng, TARGET_LAT, TARGET_LNG);
+      if (distance > MAX_DISTANCE_M) {
+        return ContentService.createTextOutput(JSON.stringify({ 
+          status: "error", 
+          message: "❌ บันทึกไม่สำเร็จ: คุณอยู่นอกพื้นที่บริษัท (ห่าง " + Math.round(distance) + " เมตร)" 
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
 
-    <div id="register-area" style="display: none;">
-        <div class="form-group">
-            <label for="empNameInput">SECURITY ALERT: UNKNOWN DEVICE DETECTED</label>
-            <input type="text" id="empNameInput" placeholder="กรอก ชื่อ - นามสกุล เพื่อจับคู่รหัส">
-        </div>
-        <button type="button" class="btn btn-orange" onclick="registerDevice()">📲 AUTHORIZE THIS DEVICE</button>
-    </div>
+      // ⏱️ คำนวณช่วงเวลาปัจจุบัน
+      const now = new Date();
+      const timeStr = Utilities.formatDate(now, "GMT+7", "HH:mm"); 
+      const todayStr = Utilities.formatDate(now, "GMT+7", "yyyy-MM-dd"); 
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+      const currentTimeValue = (currentHour * 100) + currentMinute; 
 
-    <div id="main-area" style="display: none;">
-        <div id="welcome-msg" class="welcome-back"></div>
-        
-        <div id="camera-container">
-            <video id="video" autoplay playsinline muted></video>
-            <img id="captured-image" alt="Captured">
-        </div>
+      // 🚨 [เพิ่มระบบ: บล็อกวันเสาร์ และ วันอาทิตย์ อัตโนมัติ] 🚨
+      const currentDay = now.getDay(); // 0 = วันอาทิตย์, 6 = วันเสาร์
+      if (currentDay === 0 || currentDay === 6) {
+        return ContentService.createTextOutput(JSON.stringify({ 
+          status: "error", 
+          message: "❌ ไม่สำเร็จ: วันนี้เป็นวันเสาร์-อาทิตย์ (วันหยุดประจำสัปดาห์) ไม่ต้องลงเวลาทำงานครับ" 
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
 
-        <button type="button" class="btn" id="capture-btn" onclick="capturePhoto()">📸 BIOMETRIC SCAN (ถ่ายรูป)</button>
-        <button type="button" class="btn btn-secondary" id="retake-btn" onclick="retakePhoto()" style="display:none;">🔄 RESET SCANNER (ถ่ายใหม่)</button>
-        
-        <button type="button" class="btn btn-submit-dynamic" id="submit-btn" onclick="submitAttendance()">📥 ส่งเวลาเข้างาน</button>
-        
-        <button type="button" id="clear-btn" onclick="clearDevice()">⚠️ DE-AUTHORIZE DEVICE</button>
-    </div>
-
-    <div id="status"></div>
-</div>
-
-<script>
-    const BACKEND_URL = "https://script.google.com/macros/s/AKfycbxyCwvvkH_7oTL08MCuihUOgOdziS93WPLtBXLC59D_x8sCM3TT5DZEq96QmWiyNKg8/exec"; 
-
-    let base64Photo = "";
-    let userLocation = { lat: null, lng: null };
-    let activeStream = null;
-    let savedName = "";
-    
-    const video = document.getElementById('video');
-    const capturedImage = document.getElementById('captured-image');
-    const captureBtn = document.getElementById('capture-btn');
-    const retakeBtn = document.getElementById('retake-btn');
-    const submitBtn = document.getElementById('submit-btn');
-    const statusDiv = document.getElementById('status');
-    const radarLight = document.getElementById('radar-light');
-    const radarText = document.getElementById('radar-text');
-
-    // 🕒 ฟังก์ชันนาฬิกาเรียลไทม์ + ควบคุมชื่อปุ่มอัจฉริยะ (ก่อน/หลัง 13.00 น.)
-    function runLiveClockAndCheckShift() {
-        setInterval(() => {
-            const now = new Date();
-            document.getElementById('clock-display').innerText = now.toLocaleTimeString('th-TH', { hour12: false });
+      // 🚨 [ระบบตรวจสอบวันหยุดราชการ/บริษัท จากแท็บ Holidays]
+      const holidaySheet = ss.getSheetByName("Holidays");
+      if (holidaySheet) {
+        const holidayLastRow = holidaySheet.getLastRow();
+        if (holidayLastRow > 1) {
+          const holidayData = holidaySheet.getRange(2, 1, holidayLastRow - 1, 1).getValues();
+          for (let h = 0; h < holidayData.length; h++) {
+            if (!holidayData[h][0]) continue;
+            const holidayDateObj = new Date(holidayData[h][0]);
+            const holidayDateStr = Utilities.formatDate(holidayDateObj, "GMT+7", "yyyy-MM-dd");
             
-            // ตรวจสอบชั่วโมงปัจจุบัน
-            const currentHour = now.getHours();
-            if (currentHour >= 13) {
-                submitBtn.innerHTML = "📤 ส่งเวลาออกงาน (CHECK-OUT)";
-                submitBtn.style.background = "var(--neon-orange)";
-                submitBtn.style.color = "#ffffff";
-                submitBtn.style.boxShadow = "0 5px 20px rgba(255, 94, 0, 0.4)";
-            } else {
-                submitBtn.innerHTML = "📥 ส่งเวลาเข้างาน (CHECK-IN)";
-                submitBtn.style.background = "var(--neon-green)";
-                submitBtn.style.color = "#020617";
-                submitBtn.style.boxShadow = "0 5px 20px rgba(57, 255, 20, 0.4)";
+            if (todayStr === holidayDateStr) {
+              return ContentService.createTextOutput(JSON.stringify({ 
+                status: "error", 
+                message: "❌ วันนี้เป็นวันหยุดราชการ/วันหยุดบริษัท ไม่ต้องลงเวลาทำงานครับ" 
+              })).setMimeType(ContentService.MimeType.JSON);
             }
-        }, 1000);
-    }
-
-    window.onload = function() {
-        runLiveClockAndCheckShift();
-        checkDeviceLock();
-    };
-
-    function checkDeviceLock() {
-        savedName = localStorage.getItem('employee_name');
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(function(position) {
-                userLocation.lat = position.coords.latitude;
-                userLocation.lng = position.coords.longitude;
-                
-                radarText.innerText = "GPS SIGNAL: SECURED (พิกัดปกติ)";
-                radarLight.style.backgroundColor = "var(--neon-green)";
-
-                if (!savedName) {
-                    document.getElementById('register-area').style.display = 'block';
-                    document.getElementById('main-area').style.display = 'none';
-                } else {
-                    document.getElementById('register-area').style.display = 'none';
-                    document.getElementById('main-area').style.display = 'block';
-                    document.getElementById('welcome-msg').innerHTML = "🔑 ACCESS GRANTED: " + savedName;
-                    document.getElementById('camera-container').style.display = 'block';
-                    initCamera();
-                }
-            }, function(error) {
-                radarText.innerText = "GPS ERROR: SIGNAL LOST! (โปรดเปิดสิทธิ์)";
-                radarLight.style.backgroundColor = "var(--neon-red)";
-            }, { enableHighAccuracy: true, timeout: 10000 });
+          }
         }
-    }
+      }
 
-    function registerDevice() {
-        const nameInput = document.getElementById('empNameInput').value.trim();
-        if (!nameInput) return alert("กรุณากรอกชื่อและนามสกุลจริงด้วยครับ");
-        
-        localStorage.setItem('employee_name', nameInput);
-        savedName = nameInput;
-        
-        document.getElementById('register-area').style.display = 'none';
-        document.getElementById('main-area').style.display = 'block';
-        document.getElementById('welcome-msg').innerHTML = "🔑 ACCESS GRANTED: " + savedName;
-        document.getElementById('camera-container').style.display = 'block';
-        initCamera();
-    }
+      let attendanceType = "";   
+      let attendanceNote = "-";  
 
-    function initCamera() {
-        const constraints = { video: { facingMode: "user" }, audio: false };
-        navigator.mediaDevices.getUserMedia(constraints)
-        .then(function(stream) {
-            activeStream = stream;
-            video.srcObject = stream;
-        })
-        .catch(function(err) {
-            showStatus("🚨 HARDWARE ERROR: ไม่สามารถเปิดใช้งานกล้องหน้าได้", "error");
-        });
-    }
-
-    function capturePhoto() {
-        let canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth || 640;
-        canvas.height = video.videoHeight || 480;
-        let ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
-        base64Photo = canvas.toDataURL('image/jpeg', 0.6);
-        capturedImage.src = base64Photo;
-        
-        video.style.display = 'none';
-        capturedImage.style.display = 'block';
-        captureBtn.style.display = 'none';
-        retakeBtn.style.display = 'block';
-        submitBtn.style.display = 'block';
-    }
-
-    function retakePhoto() {
-        video.style.display = 'block';
-        capturedImage.style.display = 'none';
-        captureBtn.style.display = 'block';
-        retakeBtn.style.display = 'none';
-        submitBtn.style.display = 'none';
-        base64Photo = "";
-    }
-
-    function submitAttendance() {
-        if (!savedName) return showStatus("❌ SECURITY ERROR: ไม่พบสิทธิ์ผู้ใช้งานเครื่องนี้", "error");
-        if (!base64Photo) return showStatus("❌ BIOMETRIC ERROR: กรุณาสแกนใบหน้าก่อน", "error");
-
-        showStatus("⚡ UPLOADING DATA TO SECURE CLOUD...", "loading");
-        submitBtn.disabled = true;
-
-        let payload = {
-            action: "submit_attendance",
-            name: savedName,
-            lat: userLocation.lat,
-            lng: userLocation.lng,
-            photo: base64Photo.split(',')[1]
-        };
-
-        fetch(BACKEND_URL, {
-            method: 'POST',
-            body: JSON.stringify(payload)
-        })
-        .then(res => res.json())
-        .then(response => {
-            submitBtn.disabled = false;
-            if(response.status === "success") {
-                showStatus(response.message, "success");
-                setTimeout(retakePhoto, 2500);
-            } else {
-                showStatus(response.message, "error");
-            }
-        })
-        .catch(err => {
-            submitBtn.disabled = false;
-            showStatus("NETWORK REFUSED: " + err, "error");
-        });
-    }
-
-    function clearDevice() {
-        if(confirm("คุณต้องการถอนสิทธิ์ยืนยันตัวตน (De-authorize) จากเครื่องนี้ใช่หรือไม่?")) {
-            localStorage.removeItem('employee_name');
-            location.reload();
+      // 1. เงื่อนไขช่วงเวลามาทำงาน (06:00 น. ถึง 11:00 น.)
+      if (currentTimeValue >= 600 && currentTimeValue <= 1100) {
+        attendanceType = "ลงเวลามา";
+        if (currentTimeValue > 800) {
+          attendanceNote = "ขอเข้าสาย";
+        } else {
+          attendanceNote = "ปกติ";
         }
-    }
+      } 
+      // 2. เงื่อนไขช่วงเวลากลับบ้าน (13:30 น. ถึง 18:00 น.)
+      else if (currentTimeValue >= 1330 && currentTimeValue <= 1800) {
+        attendanceType = "ลงเวลากลับ";
+        if (currentTimeValue < 1530) {
+          attendanceNote = "ขอออกก่อน";
+        } else {
+          attendanceNote = "ปกติ";
+        }
+      } 
+      else {
+        return ContentService.createTextOutput(JSON.stringify({ 
+          status: "error", 
+          message: "❌ บันทึกไม่สำเร็จ: ขณะนี้เวลา " + timeStr + " น. นอกเหนือช่วงเวลาลงบันทึกระบบ (มา: 06:00-11:00 / กลับ: 13:30-18:00)" 
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
 
-    function showStatus(text, type) {
-        statusDiv.innerHTML = text;
-        statusDiv.className = type;
+      // 🚨 [ระบบดักการลงเวลาซ้ำประจำวัน]
+      let logSheet = ss.getSheetByName("Attendance_Log");
+      if (!logSheet) {
+        logSheet = ss.insertSheet("Attendance_Log");
+        logSheet.appendRow(["วัน-เวลา", "ชื่อพนักงาน", "ประเภท", "หมายเหตุ", "ระยะห่าง (เมตร)", "พิกัด", "ลิงก์รูปภาพ"]);
+      } else {
+        logSheet.getRange(1, 1, 1, 7).setValues([["วัน-เวลา", "ชื่อพนักงาน", "ประเภท", "หมายเหตุ", "ระยะห่าง (เมตร)", "พิกัด", "ลิงก์รูปภาพ"]]);
+      }
+
+      const lastRow = logSheet.getLastRow();
+      if (lastRow > 1) {
+        const loggedData = logSheet.getRange(2, 1, lastRow - 1, 3).getValues();
+        for (let i = 0; i < loggedData.length; i++) {
+          if (!loggedData[i][0]) continue;
+          const rowDateObj = new Date(loggedData[i][0]);
+          const rowDateStr = Utilities.formatDate(rowDateObj, "GMT+7", "yyyy-MM-dd");
+          const rowEmpName = loggedData[i][1].toString().trim();
+          const rowType = loggedData[i][2].toString().trim();
+          
+          if (rowDateStr === todayStr && rowEmpName === payload.name.trim() && rowType === attendanceType) {
+            return ContentService.createTextOutput(JSON.stringify({ 
+              status: "error", 
+              message: "⚠️ ไม่สำเร็จ: คุณได้เคย '" + attendanceType + "' ของวันนี้ไปแล้วในระบบ!" 
+            })).setMimeType(ContentService.MimeType.JSON);
+          }
+        }
+      }
+
+      // 📸 บันทึกรูปภาพลง Google Drive
+      let fileUrl = "";
+      if (payload.photo) {
+        const folder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
+        let base64Data = payload.photo;
+        if (base64Data.indexOf(",") > -1) {
+          base64Data = base64Data.split(",")[1];
+        }
+        const bytes = Utilities.base64Decode(base64Data);
+        const timeStampStr = Utilities.formatDate(now, "GMT+7", "yyyyMMdd_HHmmss");
+        const fileName = payload.name + "_" + attendanceType + "_" + timeStampStr + ".jpg";
+        
+        const blob = Utilities.newBlob(bytes, "image/jpeg", fileName);
+        const file = folder.createFile(blob);
+        fileUrl = file.getUrl();
+      }
+
+      // บันทึกข้อมูลลงตาราง
+      const timeStamp = Utilities.formatDate(now, "GMT+7", "yyyy-MM-dd HH:mm:ss");
+      logSheet.appendRow([
+        timeStamp, 
+        payload.name, 
+        attendanceType, 
+        attendanceNote, 
+        Math.round(distance) + " เมตร", 
+        payload.lat + "," + payload.lng, 
+        fileUrl
+      ]);
+      
+      let alertMsg = "✅ " + attendanceType + "สำเร็จแล้ว!";
+      if (attendanceNote !== "ปกติ") {
+        alertMsg += " (⚠️ หมายเหตุ: " + attendanceNote + ")";
+      }
+      response = { status: "success", message: alertMsg };
     }
-</script>
-</body>
-</html>
+  } catch (err) {
+    response = { status: "error", message: "ระบบหลังบ้านขัดข้อง: " + err.toString() };
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify(response))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
