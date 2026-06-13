@@ -3,27 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ระบบบันทึกเวลาทำงานด้วย GPS (Device Lock)</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sarabun:wght@400;500;700&display=swap" rel="stylesheet">
+    <title>ระบบบันทึกเวลาทำงานด้วย GPS (Premium Version)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --orange: #ea580c;
-            --orange-hover: #ca8a04;
-            --success: #10b981;
-            --success-bg: #ecfdf5;
-            --success-text: #065f46;
-            --error: #ef4444;
-            --error-bg: #fef2f2;
-            --error-text: #991b1b;
-            --warning: #f59e0b;
-            --warning-bg: #fffbeb;
-            --warning-text: #92400e;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --bg-body: #f8fafc;
-            --card-bg: #ffffff;
+            --bg-gradient: linear-gradient(145deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+            --card-glass: rgba(255, 255, 255, 0.07);
+            --card-border: rgba(255, 255, 255, 0.12);
+            --neon-blue: #38bdf8;
+            --neon-green: #4ade80;
+            --neon-orange: #f97316;
+            --text-pure: #ffffff;
+            --text-muted: #94a3b8;
         }
 
         * { 
@@ -35,100 +26,127 @@
         }
 
         body { 
-            background: linear-gradient(135deg, #e0e7ff 0%, #f1f5f9 100%);
+            background: var(--bg-gradient);
             min-height: 100vh; 
             display: flex; 
             justify-content: center; 
             align-items: center; 
-            padding: 16px;
+            padding: 20px;
+            color: var(--text-pure);
+            overflow-x: hidden;
         }
 
-        .container { 
-            background-color: var(--card-bg); 
-            padding: 32px 24px; 
-            border-radius: 24px; 
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.04); 
+        /* กล่องหลักสไตล์กระจกโปร่งแสงสุดล้ำ */
+        .app-card { 
+            background: var(--card-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 40px 28px 32px 28px; 
+            border-radius: 32px; 
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255,255,255,0.2); 
             width: 100%; 
-            max-width: 440px; 
+            max-width: 420px; 
             text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            transition: all 0.3s ease;
+            border: 1px solid var(--card-border);
+            position: relative;
+        }
+
+        /* ส่วนหัวนาฬิกาเรียลไทม์ */
+        .live-clock {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--neon-blue);
+            font-family: 'Inter', sans-serif;
+            letter-spacing: 1px;
+            margin-bottom: 2px;
+            text-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
         }
 
         h2 { 
-            color: var(--text-main); 
-            font-size: 22px;
-            font-weight: 700;
-            margin-bottom: 6px; 
-            letter-spacing: -0.5px;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            letter-spacing: -0.3px;
         }
 
         p.subtitle { 
             color: var(--text-muted); 
-            font-size: 14px; 
+            font-size: 13px; 
             margin-bottom: 24px; 
         }
 
-        /* กล่องสถานะพิกัด GPS */
+        /* แถบพิกัด GPS แบบเรืองแสงอ่อน ๆ */
         .location-badge { 
-            font-size: 14px; 
+            font-size: 13px; 
             font-weight: 500; 
-            padding: 14px 16px; 
-            border-radius: 14px; 
-            background: var(--warning-bg); 
-            color: var(--warning-text); 
+            padding: 12px 16px; 
+            border-radius: 16px; 
+            background: rgba(245, 158, 11, 0.1); 
+            color: #fbbf24; 
             margin-bottom: 24px; 
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            border: 1px solid rgba(245, 158, 11, 0.15);
-            box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+            border: 1px solid rgba(251, 191, 36, 0.2);
+            transition: all 0.3s ease;
         }
 
         .form-group { 
-            margin-bottom: 20px; 
+            margin-bottom: 24px; 
             text-align: left; 
         }
 
         label { 
             display: block; 
-            margin-bottom: 8px; 
-            color: var(--text-main); 
-            font-weight: 600; 
-            font-size: 14px; 
+            margin-bottom: 10px; 
+            color: var(--text-muted); 
+            font-weight: 500; 
+            font-size: 13px; 
         }
 
         input[type="text"] { 
             width: 100%; 
-            padding: 14px 16px; 
-            border: 1px solid #e2e8f0; 
-            border-radius: 12px; 
+            padding: 16px; 
+            border: 1px solid var(--card-border); 
+            border-radius: 16px; 
             font-size: 16px; 
             outline: none;
-            transition: all 0.2s;
-            background-color: #f8fafc;
-            color: var(--text-main);
+            transition: all 0.25s;
+            background: rgba(15, 23, 42, 0.6);
+            color: var(--text-pure);
+            text-align: center;
         }
         
         input[type="text"]:focus {
-            border-color: var(--primary);
-            background-color: #ffffff;
-            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.25);
+            background: rgba(15, 23, 42, 0.8);
         }
 
-        /* คอมโพเนนต์กล้องสไตล์สปอร์ตล้ำยุค */
+        /* กรอบเลนส์กล้อง Cyberpunk มีเส้นกรอบเล็งใบหน้า */
         #camera-container { 
             width: 100%; 
             height: 280px; 
-            background-color: #0f172a; 
-            border-radius: 18px; 
+            background-color: #020617; 
+            border-radius: 24px; 
             overflow: hidden; 
-            margin-bottom: 20px; 
+            margin-bottom: 24px; 
             position: relative; 
             display: none; 
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            border: 2px solid #e2e8f0;
+            border: 2px solid var(--card-border);
+            box-shadow: 0 0 20px rgba(0,0,0,0.4);
+        }
+
+        /* หน้ากากกรอบสำหรับเล็งใบหน้าให้พนักงานตรงกลาง */
+        #camera-container::after {
+            content: '';
+            position: absolute;
+            top: 10%; left: 15%; right: 15%; bottom: 10%;
+            border: 2px dashed rgba(56, 189, 248, 0.4);
+            border-radius: 50%;
+            pointer-events: none;
+            box-shadow: 0 0 0 999px rgba(2, 6, 23, 0.3);
         }
 
         video, canvas { 
@@ -144,137 +162,139 @@
             height: 100%; 
             object-fit: cover; 
             transform: scaleX(-1); 
+            position: relative;
+            z-index: 2;
         }
 
-        /* ปุ่มกดดีไซน์ Responsive ทรงมนโค้ง */
+        /* ปุ่มกดสไตล์ Fintech เรียบ หรู มีมิติ */
         .btn { 
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            background-color: var(--primary); 
-            color: white; 
+            background: var(--neon-blue);
+            color: #0f172a; 
             border: none; 
-            padding: 14px 20px; 
+            padding: 16px 20px; 
             width: 100%; 
-            border-radius: 14px; 
+            border-radius: 16px; 
             font-size: 16px; 
             font-weight: 600; 
             cursor: pointer; 
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
             margin-bottom: 12px; 
-            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.12);
         }
 
         .btn:hover { 
-            background-color: var(--primary-hover); 
+            filter: brightness(1.1);
             transform: translateY(-1px);
-            box-shadow: 0 6px 12px -1px rgba(37, 99, 235, 0.2);
+            box-shadow: 0 8px 20px rgba(56, 189, 248, 0.3);
         }
         
         .btn:active {
-            transform: translateY(0);
+            transform: translateY(1px);
         }
 
         .btn:disabled {
-            background-color: #94a3b8;
+            background: #334155 !important;
+            color: #64748b !important;
             cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
+            transform: none !important;
+            box-shadow: none !important;
+            filter: none;
         }
 
         .btn-orange { 
-            background-color: var(--orange); 
-            box-shadow: 0 4px 6px -1px rgba(234, 88, 12, 0.12);
+            background: linear-gradient(90deg, #f97316 0%, #ea580c 100%);
+            color: var(--text-pure);
         }
         .btn-orange:hover { 
-            background-color: #c2410c; 
-            box-shadow: 0 6px 12px -1px rgba(234, 88, 12, 0.2);
+            box-shadow: 0 8px 20px rgba(249, 115, 22, 0.3);
         }
 
         .btn-secondary { 
-            background-color: #f1f5f9; 
-            color: #475569; 
-            box-shadow: none;
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-pure);
+            border: 1px solid var(--card-border);
         }
         .btn-secondary:hover { 
-            background-color: #e2e8f0; 
-            color: #1e293b;
+            background: rgba(255, 255, 255, 0.15);
         }
 
-        /* แจ้งเตือนสเตตัสแบบเรียบหรู */
+        /* กล่องแสดงผลสถานะแจ้งเตือน */
         #status { 
             margin-top: 16px; 
             font-size: 14px; 
-            font-weight: 600; 
-            padding: 14px; 
-            border-radius: 12px; 
+            font-weight: 500; 
+            padding: 14px 16px; 
+            border-radius: 16px; 
             display: none; 
             text-align: center;
             line-height: 1.5;
-            animation: slideUp 0.3s ease-out;
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .success { background-color: var(--success-bg); color: var(--success-text); display: block !important; border: 1px solid rgba(16, 185, 129, 0.15); }
-        .error { background-color: var(--error-bg); color: var(--error-text); display: block !important; border: 1px solid rgba(239, 68, 68, 0.15); }
-        .loading { background-color: var(--warning-bg); color: var(--warning-text); display: block !important; border: 1px solid rgba(245, 158, 11, 0.15); }
+        .success { background: rgba(16, 185, 129, 0.15); color: #34d399; display: block !important; border: 1px solid rgba(52, 211, 153, 0.2); text-shadow: 0 0 10px rgba(52,211,153,0.2); }
+        .error { background: rgba(239, 68, 68, 0.15); color: #f87171; display: block !important; border: 1px solid rgba(248, 113, 113, 0.2); }
+        .loading { background: rgba(56, 189, 248, 0.15); color: #38bdf8; display: block !important; border: 1px solid rgba(56, 189, 248, 0.2); }
 
+        /* แถบต้อนรับพนักงาน */
         .welcome-back { 
-            background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 100%);
-            color: var(--text-main); 
-            padding: 12px 16px; 
-            border-radius: 12px; 
-            font-weight: 600; 
-            margin-bottom: 20px; 
-            font-size: 15px; 
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-pure); 
+            padding: 14px 16px; 
+            border-radius: 16px; 
+            font-weight: 500; 
+            margin-bottom: 24px; 
+            font-size: 14px; 
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
-            border-left: 4px solid var(--primary);
+            gap: 8px;
+            border-right: 4px solid var(--neon-blue);
+            border-left: 4px solid var(--neon-blue);
         }
 
         #clear-btn { 
-            margin-top: 16px; 
-            font-size: 13px; 
+            margin-top: 20px; 
+            font-size: 12px; 
             padding: 8px; 
             background: none; 
-            color: #94a3b8; 
+            color: #64748b; 
             border: none;
             cursor: pointer;
-            text-decoration: underline;
             transition: color 0.2s;
+            letter-spacing: 0.3px;
         }
         #clear-btn:hover {
-            color: var(--error);
+            color: #ef4444;
         }
 
         @keyframes slideUp {
-            from { opacity: 0; transform: translateY(8px); }
+            from { opacity: 0; transform: translateY(12px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* ตกแต่งหน้าจอให้เข้ากับแท็บเล็ตและคอมพิวเตอร์ */
         @media (min-width: 480px) {
-            body { padding: 24px; }
-            .container { padding: 40px 32px; border-radius: 28px; }
+            .app-card { padding: 48px 36px 36px 36px; border-radius: 40px; }
         }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div class="app-card">
+    <div class="live-clock" id="clock-display">00:00:00</div>
     <h2>บันทึกเวลาปฏิบัติราชการ</h2>
     <p class="subtitle">โรงเรียนบ้านหนองประดู่ สพป.ลพบุรี เขต 2</p>
     
-    <div id="location-info" class="location-badge">⏳ กำลังตรวจสอบตำแหน่งพิกัด GPS ของคุณ...</div>
+    <div id="location-info" class="location-badge">⏳ กำลังสแกนชั้นบรรยากาศค้นหาพิกัด GPS...</div>
 
     <div id="register-area" style="display: none;">
         <div class="form-group">
-            <label for="empNameInput">ลงทะเบียนเครื่องครั้งแรก: พิมพ์ชื่อ-นามสกุลของคุณ</label>
-            <input type="text" id="empNameInput" placeholder="ตัวอย่าง: นายสมชาย ใจดี">
+            <label for="empNameInput">ระบบตรวจพบอุปกรณ์ใหม่: กรุณากรอกชื่อ-นามสกุลจริง</label>
+            <input type="text" id="empNameInput" placeholder="ระบุ ชื่อ - นามสกุล">
         </div>
-        <button type="button" class="btn btn-orange" onclick="registerDevice()">📲 ผูกชื่อเข้ากับเครื่องนี้</button>
+        <button type="button" class="btn btn-orange" onclick="registerDevice()">📲 ลงทะเบียนผูกรหัสเครื่องนี้</button>
     </div>
 
     <div id="main-area" style="display: none;">
@@ -285,18 +305,18 @@
             <img id="captured-image" alt="Captured">
         </div>
 
-        <button type="button" class="btn" id="capture-btn" onclick="capturePhoto()">📸 ถ่ายรูปใบหน้า</button>
-        <button type="button" class="btn btn-secondary" id="retake-btn" onclick="retakePhoto()" style="display:none;">🔄 ถ่ายใหม่</button>
-        <button type="button" class="btn" id="submit-btn" onclick="submitAttendance()" style="background-color: #10b981; margin-top:12px; display: none; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);">📤 ส่งเวลาเข้างาน</button>
+        <button type="button" class="btn" id="capture-btn" onclick="capturePhoto()">📸 สแกนใบหน้าจับเวลา</button>
+        <button type="button" class="btn btn-secondary" id="retake-btn" onclick="retakePhoto()" style="display:none;">🔄 รีเซ็ตหน้ากล้อง</button>
+        <button type="button" class="btn" id="submit-btn" onclick="submitAttendance()" style="background: var(--neon-green); color: #064e3b; margin-top:14px; display: none; box-shadow: 0 10px 20px rgba(74, 222, 128, 0.25);">📤 ยืนยันการส่งเวลาลงฐานข้อมูล</button>
         
-        <button type="button" id="clear-btn" onclick="clearDevice()">ลบการผูกชื่อเครื่องนี้</button>
+        <button type="button" id="clear-btn" onclick="clearDevice()">ยกเลิกการลงทะเบียนเครื่องนี้</button>
     </div>
 
     <div id="status"></div>
 </div>
 
 <script>
-    // ⚠️ นำลิงก์จากหน้า Deployment (/exec) ของกูเกิลมาใส่ตรงนี้เหมือนเดิมครับ
+    // ⚠️ คงลิงก์ระบบเดิมของพี่ไว้
     const BACKEND_URL = "https://script.google.com/macros/s/AKfycbxyCwvvkH_7oTL08MCuihUOgOdziS93WPLtBXLC59D_x8sCM3TT5DZEq96QmWiyNKg8/exec"; 
 
     let base64Photo = "";
@@ -312,7 +332,16 @@
     const statusDiv = document.getElementById('status');
     const locationInfo = document.getElementById('location-info');
 
+    // ฟังก์ชันรันนาฬิกาให้วิ่งเรียลไทม์ล้ำ ๆ
+    function startLiveClock() {
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('clock-display').innerText = now.toLocaleTimeString('th-TH', { hour12: false });
+        }, 1000);
+    }
+
     window.onload = function() {
+        startLiveClock();
         checkDeviceLock();
     };
 
@@ -323,10 +352,10 @@
                 userLocation.lat = position.coords.latitude;
                 userLocation.lng = position.coords.longitude;
                 
-                locationInfo.innerHTML = "✅ ตรวจสอบพิกัด GPS เรียบร้อย";
-                locationInfo.style.backgroundColor = "var(--success-bg)";
-                locationInfo.style.color = "var(--success-text)";
-                locationInfo.style.borderColor = "rgba(16, 185, 129, 0.2)";
+                locationInfo.innerHTML = "📡 เชื่อมต่อสัญญาณดาวเทียม GPS สำเร็จ";
+                locationInfo.style.backgroundColor = "rgba(16, 185, 129, 0.1)";
+                locationInfo.style.color = "#34d399";
+                locationInfo.style.borderColor = "rgba(52, 211, 153, 0.3)";
 
                 if (!savedName) {
                     document.getElementById('register-area').style.display = 'block';
@@ -334,29 +363,29 @@
                 } else {
                     document.getElementById('register-area').style.display = 'none';
                     document.getElementById('main-area').style.display = 'block';
-                    document.getElementById('welcome-msg').innerHTML = "👤 เครื่องนี้ผูกกับคุณ: " + savedName;
+                    document.getElementById('welcome-msg').innerHTML = "🔒 อุปกรณ์ผ่านการยืนยันตัวตน: " + savedName;
                     document.getElementById('camera-container').style.display = 'block';
                     initCamera();
                 }
             }, function(error) {
-                locationInfo.innerHTML = "❌ เข้าถึงพิกัดไม่ได้! กรุณาเปิดสิทธิ์พิกัดบนมือถือ";
-                locationInfo.style.backgroundColor = "var(--error-bg)";
-                locationInfo.style.color = "var(--error-text)";
-                locationInfo.style.borderColor = "rgba(239, 68, 68, 0.2)";
+                locationInfo.innerHTML = "🚨 สัญญาณล้มเหลว! โปรดเปิด Location ในมือถือ";
+                locationInfo.style.backgroundColor = "rgba(239, 68, 68, 0.1)";
+                locationInfo.style.color = "#f87171";
+                locationInfo.style.borderColor = "rgba(248, 113, 113, 0.3)";
             }, { enableHighAccuracy: true, timeout: 10000 });
         }
     }
 
     function registerDevice() {
         const nameInput = document.getElementById('empNameInput').value.trim();
-        if (!nameInput) return alert("กรุณากรอกชื่อ-นามสกุลก่อนครับ");
+        if (!nameInput) return alert("กรุณาระบุชื่อ-นามสกุลผู้ใช้งานระบบก่อนครับ");
         
         localStorage.setItem('employee_name', nameInput);
         savedName = nameInput;
         
         document.getElementById('register-area').style.display = 'none';
         document.getElementById('main-area').style.display = 'block';
-        document.getElementById('welcome-msg').innerHTML = "👤 เครื่องนี้ผูกกับคุณ: " + savedName;
+        document.getElementById('welcome-msg').innerHTML = "🔒 อุปกรณ์ผ่านการยืนยันตัวตน: " + savedName;
         document.getElementById('camera-container').style.display = 'block';
         initCamera();
     }
@@ -369,7 +398,7 @@
             video.srcObject = stream;
         })
         .catch(function(err) {
-            showStatus("⚠️ ไม่สามารถเปิดกล้องได้ กรุณาตรวจสอบสิทธิ์กล้องของเบราว์เซอร์", "error");
+            showStatus("⚠️ ระบบไม่สามารถเข้าถึงกล้องหน้าได้ โปรดอนุญาตสิทธิ์กล้อง", "error");
         });
     }
 
@@ -400,10 +429,10 @@
     }
 
     function submitAttendance() {
-        if (!savedName) return showStatus("❌ ไม่พบชื่อผู้ผูกเครื่อง", "error");
-        if (!base64Photo) return showStatus("❌ กรุณาถ่ายรูปใบหน้าก่อนครับ", "error");
+        if (!savedName) return showStatus("❌ ไม่พบบัญชีผู้ผูกเครื่อง", "error");
+        if (!base64Photo) return showStatus("❌ กรุณาสแกนถ่ายภาพใบหน้าก่อนครับ", "error");
 
-        showStatus("⏳ กำลังบันทึกเวลา...", "loading");
+        showStatus("⚡ กำลังส่งข้อมูลผ่านระบบคลาวด์...", "loading");
         submitBtn.disabled = true;
 
         let payload = {
@@ -430,12 +459,12 @@
         })
         .catch(err => {
             submitBtn.disabled = false;
-            showStatus("ข้อผิดพลาดระบบ: " + err, "error");
+            showStatus("เครือข่ายขัดข้อง: " + err, "error");
         });
     }
 
     function clearDevice() {
-        if(confirm("คุณต้องการลบชื่อที่ผูกกับเครื่องนี้เพื่อลงทะเบียนใหม่ใช่หรือไม่?")) {
+        if(confirm("คุณต้องการยกเลิกการผูกชื่อกับอุปกรณ์เครื่องนี้หรือไม่?")) {
             localStorage.removeItem('employee_name');
             location.reload();
         }
