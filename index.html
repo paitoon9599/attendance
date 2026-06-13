@@ -6,7 +6,7 @@
     <title>ระบบบันทึกเวลาทำงานด้วย GPS (Device Lock)</title>
     <style>
         * { box-sizing: border-box; font-family: 'Sarabun', sans-serif; }
-        body { background-color: #f0f4f8; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        body { background-color: #f0f4f8; margin: 0; padding: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; }
         .container { background-color: white; padding: 30px; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); width: 100%; max-width: 450px; text-align: center; }
         h2 { color: #1a365d; margin-bottom: 5px; }
         p.subtitle { color: #718096; font-size: 14px; margin-bottom: 25px; }
@@ -27,7 +27,7 @@
         .loading { background-color: #feebc8; color: #744210; display: block !important; }
         .location-badge { font-size: 14px; font-weight: bold; padding: 12px; border-radius: 8px; background: #feebc8; color: #744210; margin-bottom: 20px; }
         
-        /* 📱 ปรับแต่งแถบชื่อให้แสดงผลแบบแนวนอน และจัดไอคอนถังขยะไว้ท้ายสุด */
+        /* 📱 ปรับแต่งแถบชื่อพนักงาน */
         .welcome-back { 
             background-color: #e2e8f0; 
             color: #2d3748; 
@@ -42,7 +42,7 @@
             text-align: left;
         }
 
-        /* ปุ่มรูปถังขยะแบบไอคอน มินิมอล */
+        /* ปุ่มรูปถังขยะท้ายชื่อ */
         .clear-icon-btn {
             background: none;
             border: none;
@@ -56,9 +56,11 @@
             justify-content: center;
         }
         .clear-icon-btn:hover {
-            background-color: rgba(220, 38, 38, 0.1); /* ไฮไลท์แดงจางๆ ตอนเอาเมาส์ชี้ */
+            background-color: rgba(220, 38, 38, 0.1);
         }
-            .footer-credits {
+
+        /* 🏷️ สไตล์ข้อความท้ายเว็บ (Footer Credits) */
+        .footer-credits {
             margin-top: 25px;
             font-size: 11px;
             color: #a0aec0;
@@ -100,8 +102,8 @@
     </div>
 
     <div id="status"></div>
-</div>
-<div class="footer-credits">Powered by GAS Sheet</div>
+
+    <div class="footer-credits">Powered by GAS Sheet</div>
 </div>
 
 <script>
@@ -155,7 +157,6 @@
                 } else {
                     document.getElementById('register-area').style.display = 'none';
                     document.getElementById('main-area').style.display = 'block';
-                    // นำชื่อไปใส่ต่อท้ายรูปโทรศัพท์มือถือ
                     document.getElementById('user-display-info').innerHTML = "📱 " + savedName;
                     document.getElementById('camera-container').style.display = 'block';
                     initCamera();
