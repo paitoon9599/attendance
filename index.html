@@ -267,30 +267,26 @@ function showStatus(text, type) {
         statusDiv.className = type;
     }
 
-    // 🎯 รวมกลุ่มคำสั่งให้รันตอนโหลดหน้าเว็บสำเร็จ (จัดระเบียบรวมกับของเดิมที่มี)
-    document.addEventListener("DOMContentLoaded", function() {
-        
-        // 1. [เพิ่มท่อนนี้ไว้บนสุด] ดึงชื่อโรงเรียนจากระบบหลังบ้านมาแสดงทันที
-        fetch(`${BACKEND_URL}?action=getSchoolName`)
-            .then(response => response.json())
-            .then(data => {
-                if (data && data.schoolName) {
-                    document.getElementById("school-name-display").innerText = data.schoolName;
-                } else {
-                    document.getElementById("school-name-display").innerText = "ระบบบันทึกเวลาทำงาน";
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
+document.addEventListener("DOMContentLoaded", function() {
+    
+    // 📡 ดึงข้อมูลชื่อโรงเรียนจาก BACKEND_URL ที่มีอยู่แล้ว
+    fetch(`${BACKEND_URL}?action=getSchoolName`)
+        .then(response => response.text()) // 💡 เปลี่ยนจาก .json() เป็น .text()
+        .then(schoolName => {
+            if (schoolName && schoolName.trim() !== "") {
+                document.getElementById("school-name-display").innerText = schoolName;
+            } else {
                 document.getElementById("school-name-display").innerText = "ระบบบันทึกเวลาทำงาน";
-            });
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching school name:", error);
+            document.getElementById("school-name-display").innerText = "ระบบบันทึกเวลาทำงาน";
+        });
 
-        // 2. [โค้ดเดิมของพี่] พวกตรวจพิกัด GPS ตรวจสอบ Cookie หรือตั้งค่าเริ่มต้นกล้อง
-        // (ให้คงท่อนเดิมของพี่ไว้ใต้ fetch ตัวนี้ได้เลยครับเพื่อป้องกันโค้ดตีกัน)
-        checkExistingRegister(); // สมมุตินะครับ
-        initLocationAndCamera(); // สมมุตินะครับ
-        
-    }); // 👈 ปิดอีเวนต์ DOMContentLoaded ให้เรียบร้อย
+    // (โค้ดดั้งเดิมตัวอื่นๆ ของพี่ที่อยู่ต่อท้ายใน DOMContentLoaded วางไว้ตรงนี้ได้เลยครับ)
+    
+});
 </script>
 </body>
 </html>
