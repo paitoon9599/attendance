@@ -269,11 +269,12 @@ function showStatus(text, type) {
 
 document.addEventListener("DOMContentLoaded", function() {
     
-    // 📡 ดึงข้อมูลชื่อโรงเรียนจาก BACKEND_URL ที่มีอยู่แล้ว
+    // 📡 ยิงคำสั่งไปขอชื่อหน่วยงานจากชีต Config หลังบ้าน
     fetch(`${BACKEND_URL}?action=getSchoolName`)
-        .then(response => response.text()) // 💡 เปลี่ยนจาก .json() เป็น .text()
+        .then(response => response.text()) // แกะกล่องข้อมูลรูปแบบ Text ธรรมดา
         .then(schoolName => {
             if (schoolName && schoolName.trim() !== "") {
+                // นำชื่อโรงเรียนที่ได้จากชีตไปแทนที่ข้อความเดิม
                 document.getElementById("school-name-display").innerText = schoolName;
             } else {
                 document.getElementById("school-name-display").innerText = "ระบบบันทึกเวลาทำงาน";
@@ -284,8 +285,8 @@ document.addEventListener("DOMContentLoaded", function() {
             document.getElementById("school-name-display").innerText = "ระบบบันทึกเวลาทำงาน";
         });
 
-    // (โค้ดดั้งเดิมตัวอื่นๆ ของพี่ที่อยู่ต่อท้ายใน DOMContentLoaded วางไว้ตรงนี้ได้เลยครับ)
-    
+    // (พวกโค้ดตรวจสอบพิกัด GPS หรือเปิดกล้องเดิมของพี่ สามารถวางรันต่อท้ายตรงนี้ได้เลยครับ)
+
 });
 </script>
 </body>
