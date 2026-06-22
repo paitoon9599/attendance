@@ -98,12 +98,12 @@
 
         <button type="button" class="btn" id="capture-btn" onclick="capturePhoto()">📸 ถ่ายรูปใบหน้า</button>
         <button type="button" class="btn btn-secondary" id="retake-btn" onclick="retakePhoto()" style="display:none;">🔄 ถ่ายใหม่</button>
-        <button type="button" class="btn" id="submit-btn" onclick="submitAttendance()" style="margin-top:10px; display: none;">📥 ส่งเวลาเข้างาน</button>
+        <button type="button" class="btn" id="submit-btn" onclick="submitAttendance()" style="margin-top:10px; display: none;">📥 ส่งเวลามา</button>
     </div>
 
     <div id="status"></div>
 
-    <div class="footer-credits">Powered by GAS Sheet &PidchaPat Garden</div>
+    <div class="footer-credits">GAS&Sheet&PidchaPat Garden฿Service:0887672399</div>
 </div>
 
 <script>
@@ -132,10 +132,10 @@
         const currentHour = now.getHours();
 
         if (currentHour >= 13) {
-            submitBtn.innerHTML = "📤 ส่งเวลาออกงาน";
+            submitBtn.innerHTML = "📤 ส่งเวลามา";
             submitBtn.style.backgroundColor = "#e06d1f"; 
         } else {
-            submitBtn.innerHTML = "📥 ส่งเวลาเข้างาน";
+            submitBtn.innerHTML = "📥 ส่งเวลากลับ";
             submitBtn.style.backgroundColor = "#48bb78"; 
         }
     }
