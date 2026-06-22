@@ -105,8 +105,10 @@
 
     <div class="footer-credits">GAS+Sheet&PidchaPat Garden฿Service:0887672399</div>
 </div>
+
 <script>
-    const BACKEND_URL = "https://script.google.com/macros/s/AKfycbyB82PvN6T2m2mC-PLm-7KyxKINyslgxMNSpoan482qYRzUzeknQir4iH9kCe8bf5Y-/exec; 
+    // ⚠️ อย่าลืมสลับเปลี่ยนลิงก์ตามชีตของแต่ละโรงเรียนนะครับพี่
+    const BACKEND_URL = "https://script.google.com/macros/s/AKfycbyB82PvN6T2m2mC-PLm-7KyxKINyslgxMNSpoan482qYRzUzeknQir4iH9kCe8bf5Y-/exec"; 
 
     let base64Photo = "";
     let userLocation = { lat: null, lng: null };
@@ -121,10 +123,27 @@
     const statusDiv = document.getElementById('status');
     const locationInfo = document.getElementById('location-info');
 
-    window.onload = function() {
+    // 🎯 รวมศูนย์การทำงานเมื่อเปิดหน้าเว็บเสร็จสมบูรณ์ไว้ที่เดียว
+    document.addEventListener("DOMContentLoaded", function() {
+        // [งานที่ 1]: ดึงชื่อโรงเรียนจากหลังบ้าน
+        fetch(`${BACKEND_URL}?action=getSchoolName`)
+            .then(response => response.text())
+            .then(schoolName => {
+                if (schoolName && schoolName.trim() !== "") {
+                    document.getElementById("school-name-display").innerText = schoolName;
+                } else {
+                    document.getElementById("school-name-display").innerText = "ระบบบันทึกเวลาทำงาน";
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching school name:", error);
+                document.getElementById("school-name-display").innerText = "ระบบบันทึกเวลาทำงาน";
+            });
+
+        // [งานที่ 2]: รันฟังก์ชันเดิมของพี่ต่อทันที
         checkDeviceLock();
         checkTimeAndAdjustButton(); 
-    };
+    });
 
     function checkTimeAndAdjustButton() {
         const now = new Date();
@@ -261,32 +280,11 @@
             location.reload();
         }
     }
-function showStatus(text, type) {
+
+    function showStatus(text, type) {
         statusDiv.innerHTML = text;
         statusDiv.className = type;
     }
-
-document.addEventListener("DOMContentLoaded", function() {
-    
-    // 📡 ยิงคำสั่งไปขอชื่อหน่วยงานจากชีต Config หลังบ้าน
-    fetch(`${BACKEND_URL}?action=getSchoolName`)
-        .then(response => response.text()) // แกะกล่องข้อมูลรูปแบบ Text ธรรมดา
-        .then(schoolName => {
-            if (schoolName && schoolName.trim() !== "") {
-                // นำชื่อโรงเรียนที่ได้จากชีตไปแทนที่ข้อความเดิม
-                document.getElementById("school-name-display").innerText = schoolName;
-            } else {
-                document.getElementById("school-name-display").innerText = "ระบบบันทึกเวลาทำงาน";
-            }
-        })
-        .catch(error => {
-            console.error("Error fetching school name:", error);
-            document.getElementById("school-name-display").innerText = "ระบบบันทึกเวลาทำงาน";
-        });
-
-    // (พวกโค้ดตรวจสอบพิกัด GPS หรือเปิดกล้องเดิมของพี่ สามารถวางรันต่อท้ายตรงนี้ได้เลยครับ)
-
-});
 </script>
 </body>
 </html>
