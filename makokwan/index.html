@@ -1,1 +1,291 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ระบบบันทึกเวลาทำงานด้วย GPS (Device Lock)</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Sarabun', sans-serif; }
+        body { background-color: #f0f4f8; margin: 0; padding: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { background-color: white; padding: 30px; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); width: 100%; max-width: 450px; text-align: center; }
+        h2 { color: #1a365d; margin-bottom: 5px; }
+        p.subtitle { color: #718096; font-size: 14px; margin-bottom: 25px; }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; margin-bottom: 8px; color: #4a5568; font-weight: bold; font-size: 14px; }
+        input[type="text"] { width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 16px; }
+        #camera-container { width: 100%; height: 260px; background-color: #2d3748; border-radius: 12px; overflow: hidden; margin-bottom: 15px; position: relative; display: none; }
+        video, canvas { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+        #captured-image { display: none; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+        .btn { background-color: #3182ce; color: white; border: none; padding: 14px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; margin-bottom: 10px; width: 100%; }
+        .btn:hover { background-color: #2b6cb0; }
+        .btn-orange { background-color: #e06d1f; }
+        .btn-orange:hover { background-color: #c45a13; }
+        .btn-secondary { background-color: #edf2f7; color: #4a5568; }
+        #status { margin-top: 15px; font-size: 14px; font-weight: bold; padding: 10px; border-radius: 6px; display: none; }
+        .success { background-color: #c6f6d5; color: #22543d; display: block !important; }
+        .error { background-color: #fed7d7; color: #742a2a; display: block !important; }
+        .loading { background-color: #feebc8; color: #744210; display: block !important; }
+        .location-badge { font-size: 14px; font-weight: bold; padding: 12px; border-radius: 8px; background: #feebc8; color: #744210; margin-bottom: 20px; }
+        
+        /* 📱 ปรับแต่งแถบชื่อพนักงาน */
+        .welcome-back { 
+            background-color: #e2e8f0; 
+            color: #2d3748; 
+            padding: 12px 15px; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            margin-bottom: 15px; 
+            font-size: 16px; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-align: left;
+        }
+
+        /* ปุ่มรูปถังขยะท้ายชื่อ */
+        .clear-icon-btn {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .clear-icon-btn:hover {
+            background-color: rgba(220, 38, 38, 0.1);
+        }
+
+        /* 🏷️ สไตล์ข้อความท้ายเว็บ (Footer Credits) */
+        .footer-credits {
+            margin-top: 25px;
+            font-size: 11px;
+            color: #a0aec0;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>บันทึกเวลาปฏิบัติราชการ</h2>
+    <p class="subtitle" id="school-name-display">กำลังโหลดข้อมูลชื่อโรงเรียน...</p>
+    
+    <div id="location-info" class="location-badge">📡 กำลังตรวจสอบตำแหน่งพิกัด GPS ของคุณ...</div>
+
+    <div id="register-area" style="display: none;">
+        <div class="form-group">
+            <label>ลงทะเบียนเครื่องครั้งแรก: พิมพ์ชื่อ-นามสกุลของคุณ</label>
+            <input type="text" id="empNameInput" placeholder="ตัวอย่าง: นายสมชาย ใจดี">
+        </div>
+        <button type="button" class="btn btn-orange" onclick="registerDevice()">📲 ผูกชื่อเข้ากับเครื่องนี้</button>
+    </div>
+
+    <div id="main-area" style="display: none;">
+        <div id="welcome-msg" class="welcome-back">
+            <span id="user-display-info">📱 </span>
+            <button type="button" class="clear-icon-btn" onclick="clearDevice()" title="ลบการผูกชื่อเครื่องนี้">🗑️</button>
+        </div>
+        
+        <div id="camera-container">
+            <video id="video" autoplay playsinline muted></video>
+            <img id="captured-image" alt="Captured">
+        </div>
+
+        <button type="button" class="btn" id="capture-btn" onclick="capturePhoto()">📸 ถ่ายรูปใบหน้า</button>
+        <button type="button" class="btn btn-secondary" id="retake-btn" onclick="retakePhoto()" style="display:none;">🔄 ถ่ายใหม่</button>
+        <button type="button" class="btn" id="submit-btn" onclick="submitAttendance()" style="margin-top:10px; display: none;">📥 ส่งเวลามา</button>
+    </div>
+
+    <div id="status"></div>
+
+    <div class="footer-credits">GAS+Sheet&PidchaPat Garden฿Service:0887672399</div>
+</div>
+
+<script>
+    // ⚠️ อย่าลืมสลับเปลี่ยนลิงก์ตามชีตของแต่ละโรงเรียนนะครับพี่
+    const BACKEND_URL = "https://script.google.com/macros/s/AKfycbxbtTDVYkVSSFweXyAAh12FP_juWm10d0uzDYWr4rtExIRqNXv01md9FULg3ogTwgCA/exec"; 
+
+    let base64Photo = "";
+    let userLocation = { lat: null, lng: null };
+    let activeStream = null;
+    let savedName = "";
+    
+    const video = document.getElementById('video');
+    const capturedImage = document.getElementById('captured-image');
+    const captureBtn = document.getElementById('capture-btn');
+    const retakeBtn = document.getElementById('retake-btn');
+    const submitBtn = document.getElementById('submit-btn');
+    const statusDiv = document.getElementById('status');
+    const locationInfo = document.getElementById('location-info');
+
+    // 🎯 รวมศูนย์การทำงานเมื่อเปิดหน้าเว็บเสร็จสมบูรณ์ไว้ที่เดียว
+    document.addEventListener("DOMContentLoaded", function() {
+        // [งานที่ 1]: ดึงชื่อโรงเรียนจากหลังบ้าน
+        fetch(`${BACKEND_URL}?action=getSchoolName`)
+            .then(response => response.text())
+            .then(schoolName => {
+                if (schoolName && schoolName.trim() !== "") {
+                    document.getElementById("school-name-display").innerText = schoolName;
+                } else {
+                    document.getElementById("school-name-display").innerText = "ระบบบันทึกเวลาทำงาน";
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching school name:", error);
+                document.getElementById("school-name-display").innerText = "ระบบบันทึกเวลาทำงาน";
+            });
+
+        // [งานที่ 2]: รันฟังก์ชันเดิมของพี่ต่อทันที
+        checkDeviceLock();
+        checkTimeAndAdjustButton(); 
+    });
+
+    function checkTimeAndAdjustButton() {
+        const now = new Date();
+        const currentHour = now.getHours();
+
+        if (currentHour >= 13) {
+            submitBtn.innerHTML = "📤 ส่งเวลากลับ";
+            submitBtn.style.backgroundColor = "#e06d1f"; 
+        } else {
+            submitBtn.innerHTML = "📥 ส่งเวลามา";
+            submitBtn.style.backgroundColor = "#48bb78"; 
+        }
+    }
+
+    function checkDeviceLock() {
+        savedName = localStorage.getItem('employee_name');
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                userLocation.lat = position.coords.latitude;
+                userLocation.lng = position.coords.longitude;
+                
+                locationInfo.innerHTML = "📡 ตรวจสอบพิกัด GPS เรียบร้อย";
+                locationInfo.style.backgroundColor = "#c6f6d5";
+                locationInfo.style.color = "#22543d";
+
+                if (!savedName) {
+                    document.getElementById('register-area').style.display = 'block';
+                    document.getElementById('main-area').style.display = 'none';
+                } else {
+                    document.getElementById('register-area').style.display = 'none';
+                    document.getElementById('main-area').style.display = 'block';
+                    document.getElementById('user-display-info').innerHTML = "📱 " + savedName;
+                    document.getElementById('camera-container').style.display = 'block';
+                    initCamera();
+                }
+            }, function(error) {
+                locationInfo.innerHTML = "📡 เข้าถึงพิกัดไม่ได้! กรุณาเปิดสิทธิ์พิกัดบนมือถือ";
+                locationInfo.style.backgroundColor = "#fed7d7";
+                locationInfo.style.color = "#742a2a";
+            }, { enableHighAccuracy: true, timeout: 10000 });
+        }
+    }
+
+    function registerDevice() {
+        const nameInput = document.getElementById('empNameInput').value.trim();
+        if (!nameInput) return alert("กรุณากรอกชื่อ-นามสกุลก่อนครับ");
+        
+        localStorage.setItem('employee_name', nameInput);
+        savedName = nameInput;
+        
+        document.getElementById('register-area').style.display = 'none';
+        document.getElementById('main-area').style.display = 'block';
+        document.getElementById('user-display-info').innerHTML = "📱 " + savedName;
+        document.getElementById('camera-container').style.display = 'block';
+        initCamera();
+    }
+
+    function initCamera() {
+        const constraints = { video: { facingMode: "user" }, audio: false };
+        navigator.mediaDevices.getUserMedia(constraints)
+        .then(function(stream) {
+            activeStream = stream;
+            video.srcObject = stream;
+        })
+        .catch(function(err) {
+            showStatus("⚠️ ไม่สามารถเปิดกล้องได้ กรุณาตรวจสอบสิทธิ์กล้องของเบราว์เซอร์", "error");
+        });
+    }
+
+    function capturePhoto() {
+        let canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+        let ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        base64Photo = canvas.toDataURL('image/jpeg', 0.6);
+        capturedImage.src = base64Photo;
+        
+        video.style.display = 'none';
+        capturedImage.style.display = 'block';
+        captureBtn.style.display = 'none';
+        retakeBtn.style.display = 'block';
+        submitBtn.style.display = 'block';
+    }
+
+    function retakePhoto() {
+        video.style.display = 'block';
+        capturedImage.style.display = 'none';
+        captureBtn.style.display = 'block';
+        retakeBtn.style.display = 'none';
+        submitBtn.style.display = 'none';
+        base64Photo = "";
+    }
+
+    function submitAttendance() {
+        if (!savedName) return showStatus("❌ ไม่พบชื่อผู้ผูกเครื่อง", "error");
+        if (!base64Photo) return showStatus("❌ กรุณาถ่ายรูปใบหน้าก่อนครับ", "error");
+
+        showStatus("⏳ กำลังบันทึกเวลา...", "loading");
+        submitBtn.disabled = true;
+
+        let payload = {
+            action: "submit_attendance",
+            name: savedName,
+            lat: userLocation.lat,
+            lng: userLocation.lng,
+            photo: base64Photo.split(',')[1]
+        };
+
+        fetch(BACKEND_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(response => {
+            submitBtn.disabled = false;
+            if(response.status === "success") {
+                showStatus(response.message, "success");
+                setTimeout(retakePhoto, 2500);
+            } else {
+                showStatus(response.message, "error");
+            }
+        })
+        .catch(err => {
+            submitBtn.disabled = false;
+            showStatus("ข้อผิดพลาดระบบ: " + err, "error");
+        });
+    }
+
+    function clearDevice() {
+        if(confirm("คุณต้องการลบชื่อที่ผูกกับเครื่องนี้เพื่อลงทะเบียนใหม่ใช่หรือไม่?")) {
+            localStorage.removeItem('employee_name');
+            location.reload();
+        }
+    }
+
+    function showStatus(text, type) {
+        statusDiv.innerHTML = text;
+        statusDiv.className = type;
+    }
+</script>
+</body>
+</html>
 
